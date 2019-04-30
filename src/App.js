@@ -5,9 +5,23 @@ import Player from './Player';
 
 const DEFAULT_NUMBER_OF_PLAYERS = 2;
 
+function defaultState() {
+  return {
+    deck: new Deck(),     // WARNING: Deck.deal() mutates itself.
+    players: {
+      // Each entry in the players object is an id and an array of Card instances.
+      // id_1556645908371: [ Card, Card, Card ]
+    },          
+    hasWinner: false
+  }
+}
+
 class App extends React.Component {
   constructor(props) {
     super(props);
+
+    this.state = defaultState();
+
     // this.deck = new Deck();
     // let hand = [this.deck.deal(), this.deck.deal()];
     // let hand2 = [this.deck.deal(), this.deck.deal()];
@@ -23,18 +37,11 @@ class App extends React.Component {
     // } else {
     //   console.log('tie');
     // }
-    this.state = {
-      deck: new Deck(),     // WARNING: Deck.deal() mutates itself.
-      players: {
-        // Each entry in the players object is an id and an array of Card instances.
-        // id_1556645908371: [ Card, Card, Card ]
-      },          
-      hasWinner: false
-    }
+
   }
 
   componentDidMount() {    
-    this._addPlayer(DEFAULT_NUMBER_OF_PLAYERS);    
+    this._addPlayer(DEFAULT_NUMBER_OF_PLAYERS);
   }
 
   // Each time we're about to render, see if there's a player with a winning hand.
@@ -74,6 +81,7 @@ class App extends React.Component {
         {
           this.state.hasWinner ? <h1>WINNING HAND!</h1> : <button onClick={() => this._addPlayer() }>add player</button>
         }        
+        <button onClick={this._resetGame}>new game</button>
         {players}
       </div>
     );
@@ -100,6 +108,7 @@ class App extends React.Component {
     // For however many players we're adding,
     // generate an id and a new hand of 2 cards.
     for (let i=0; i<howMany; i++) {
+      console.log('adding player');
       const playerId = 'id_' + (new Date()).getTime();
       const newHand = [
         this.state.deck.deal(),
@@ -114,6 +123,12 @@ class App extends React.Component {
         ...this.state.players,  // everything that was already in this.state.players
         ...newPlayers           // everything in our newPlayers object.
       }              
+    });
+  }
+
+  _resetGame = () => {
+    this.setState(defaultState(), () => {
+      this._addPlayer(DEFAULT_NUMBER_OF_PLAYERS);
     });
   }
 }
