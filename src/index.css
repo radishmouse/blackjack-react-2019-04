@@ -12,3 +12,14 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+.App {
+  text-align: center;
+}
+
+ul, li {
+  text-align: left;
+  width: 10%;
+  margin: 10px auto;
+  padding: 0;  
+}
