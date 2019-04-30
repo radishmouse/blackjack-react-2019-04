@@ -1,8 +1,10 @@
 
+// A Card class that can compare itself to another Card.
+// Can also tell you if the card is an ace.
 export default class Card {
-    constructor(name, value) {
+    constructor(name) {
         this.name = name;
-        this.value = value;
+        // this.value = value;
     }
 
     // assumes that card names are unique

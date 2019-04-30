@@ -1,8 +1,9 @@
 import React from 'react';
-import './App.css';
 
 import Deck from './Deck';
 import Player from './Player';
+
+const DEFAULT_NUMBER_OF_PLAYERS = 2;
 
 class App extends React.Component {
   constructor(props) {
@@ -23,14 +24,21 @@ class App extends React.Component {
     //   console.log('tie');
     // }
     this.state = {
-      deck: new Deck(),
-      players: {},
+      deck: new Deck(),     // WARNING: Deck.deal() mutates itself.
+      players: {
+        // Each entry in the players object is an id and an array of Card instances.
+        // id_1556645908371: [ Card, Card, Card ]
+      },          
       hasWinner: false
     }
   }
 
-  static getDerivedStateFromProps(props, state) {
-    // see if there's a winner
+  componentDidMount() {    
+    this._addPlayer(DEFAULT_NUMBER_OF_PLAYERS);    
+  }
+
+  // Each time we're about to render, see if there's a player with a winning hand.
+  static getDerivedStateFromProps(props, state) {    
     let has21 = false;
     Object.values(state.players).forEach(hand => {
       if (Deck.valueOfHand(hand) === 21) {
@@ -44,49 +52,69 @@ class App extends React.Component {
 
   render() {
 
+    // Create an array of <Player /> elements from the entries in this.state.players
     const players = Object.keys(this.state.players).map(id => {
       const theirHand = this.state.players[id];
-      return <Player hand={theirHand} id={id} handleHit={this._hitMe} score={Deck.valueOfHand(theirHand)} />;
+      const score = Deck.valueOfHand(theirHand);
+
+      return (
+        <Player 
+          key={id} 
+          id={id} 
+          hand={theirHand} 
+          handleHit={score <= 21 ? this._hitMe : null} 
+          score={score} 
+        />
+      );
     })
 
+    // Render a button to add more players and our array of <Player /> elements
     return (
       <div className="App">
         {
-          this.state.hasWinner ? <h1>WINNING HAND!</h1> : <button onClick={this._addPlayer}>add player</button>
-        }
-        
+          this.state.hasWinner ? <h1>WINNING HAND!</h1> : <button onClick={() => this._addPlayer() }>add player</button>
+        }        
         {players}
       </div>
     );
   }
 
-  _findPlayerHand = (id) => {
-    return this.state.players[id];
-  }
-
   _hitMe = (id) => {
-    console.log(id);
-    console.log(this._findPlayerHand(id));
-    this.setState({
-      players: {
-        ...this.state.players,
-        [id]: [...this._findPlayerHand(id), this.state.deck.deal()]
-      }              
-    })
+    // Only give players more cards if there isn't a winner.
+    if (!this.state.hasWinner) {
+      this.setState({
+        players: {
+          ...this.state.players,
+          [id]: [...this.state.players[id], this.state.deck.deal()]
+        }              
+      });
+    }
   }
 
-  _addPlayer = () => {
-    const playerId = 'id_' + (new Date()).getTime();
-    const newHand = [
-      this.state.deck.deal(),
-      this.state.deck.deal()
-    ]
+  // Tried calling this in a loop, but the this.setState calls were
+  // stepping on each other's toes.
+  _addPlayer = (howMany=1) => {
+    console.log('adding player');
+    let newPlayers = {};
+
+    // For however many players we're adding,
+    // generate an id and a new hand of 2 cards.
+    for (let i=0; i<howMany; i++) {
+      const playerId = 'id_' + (new Date()).getTime();
+      const newHand = [
+        this.state.deck.deal(),
+        this.state.deck.deal()
+      ];
+      newPlayers[playerId] =  newHand;
+    }
+
+    // Set the new state
     this.setState({
       players: {
-        ...this.state.players,
-        [playerId]: newHand
+        ...this.state.players,  // everything that was already in this.state.players
+        ...newPlayers           // everything in our newPlayers object.
       }              
-    })
+    });
   }
 }
 

@@ -1,5 +1,9 @@
 import Card from './Card';
+
+// Random int function for pulling a random card from the deck.
 import {randInt} from './utils';
+
+// Arrays used for generating card names.
 const SUITS = [
     'H',
     'C',
@@ -7,27 +11,40 @@ const SUITS = [
     'D'
 ];
 const FACES = [
-    'A',        // Not correctly implemented yet.
+    'A',
     'K',
     'Q',
     'J',
     '10',
-    ...('23456789'.split('')),
+    ...('23456789'.split('')),  // Because I didn't feel like typing them as separate strings
 ];
 
 export default class Deck {
     constructor() {
-
         this.cards = [];
+
+        // Generate our cards.
         SUITS.forEach(suit => {
             FACES.forEach(face => {
                 this.cards.push(`${face}${suit}`);
             });
         });
-        console.log(`new Deck with ${this.cards.length} cards`);
-        console.log(this.cards);
+        // console.log(`new Deck with ${this.cards.length} cards`);
+        // console.log(this.cards);
     }
 
+    // Method for counting aces in a hand.
+    static howManyAces(hand) {
+        let howMany = 0;
+        for (let i=0; i< hand.length; i++) {
+            if (hand[i].name.toLowerCase().startsWith('a')) {
+                howMany++;
+            }
+        }
+        return howMany;
+    }
+
+    // Given a card, return the numeric value.
     static valueOfCard(card) {
         // it's a 10 card
         if (card.name.length === 3) {
@@ -38,45 +55,30 @@ export default class Deck {
                 return parseInt(firstChar);
             } else if ('KQJ'.includes(firstChar)) {
                 return 10;
-            } else {
-                // return -1; // it's an ace, which is special.
-                return 11; // it's an ace, which is special.
+            } else {                
+                return 11; // Aces are 11, but can be adjusted in the context of other cards.
             }
         }
     }
 
+    // Calculate the numeric value of a hand,
+    // adjusting for aces, if the total value is over 21.
     static valueOfHand(hand) {
         // assumes that hands are arrays of Card instances
+        const acesInHand = Deck.howManyAces(hand);
         let handVal = 0;
-        hand.forEach(card => handVal += card.value);
-        return handVal;
-        // let handVal = 0;
-        // const handHasAce = Deck.hasAce(hand);
-
-        // if (!handHasAce) {
-        //     // sum the values
-        //     hand.forEach(card => handVal += card.value);
-        // } else {
-        //     throw new Error('ACES NOT IMPLEMENTED');
-        //     const aces = hand.filter(c => c.isAce());
-        //     const withoutAces = hand.filter(c => !c.isAce());
-
-        //     const valueWithoutAces = withoutAces.reduce((sum, card) => card.value, 0);
-            
-        // }
-        // return handVal;
-    }
-
-    static hasAce(hand) {
-        let hasAnAce = false;
-        for (let i=0; i< hand.length; i++) {
-            if (hand[i].name.toLowerCase().startsWith('a')) {
-                hasAnAce = true;
+        hand.forEach(card => handVal += Deck.valueOfCard(card));
+        for (let i = 0; i<acesInHand; i++) {
+            if (handVal > 21) {
+                handVal -= 10;  // adjust down for aces
             }
         }
-        return hasAnAce;
+        
+        return handVal;
     }
 
+    // Currently unused.
+    // Helper function for sorting hands
     static doesBeat(hand1, hand2) {
         const hand1Val = Deck.valueOfHand(hand1);
         const hand2Val = Deck.valueOfHand(hand2);
@@ -89,15 +91,17 @@ export default class Deck {
         }
     }
 
+    // Pulls a random card from the deck.
     randomCard() {
         const index = randInt(this.cards.length);
         const aCard = this.cards[index];
         const cardInstance = new Card(aCard);
         console.log(aCard);
-        cardInstance.value = Deck.valueOfCard(cardInstance);
+        // cardInstance.value = Deck.valueOfCard(cardInstance);
         return cardInstance;
     }
 
+    // Removes a random card from the deck.
     deal() {
         const theCard = this.randomCard();
         this.cards = [
