@@ -16,6 +16,45 @@ const styles = {
     }
 }
 
+async function fetchFreshNames() {
+    const {data} = await axios.get(NAMES_URL);
+    return data;
+}
+
+async function getRandomName() {
+    let data = [];
+    const key = 'names';
+    // try localStorage
+    let namesInStorage = localStorage.getItem(key);
+    if (namesInStorage) {
+        // Found some! Let's use them.
+        namesInStorage = JSON.parse(namesInStorage);
+        data = [...namesInStorage];
+
+        // Grab some more, but don't make uas wait
+        if (namesInStorage.length < 100) {
+            fetchFreshNames()
+                .then(newNames => {
+                    localStorage.setItem(key, JSON.stringify([...newNames, ...namesInStorage]));
+                });
+        }        
+    } else {
+        // Nothing in localStorage, let's go shopping!
+        const newNames = await fetchFreshNames();
+        // Save for later...
+        localStorage.setItem(key, JSON.stringify([...newNames]));
+        // and use them now.
+        data = [...newNames];
+    }
+
+    // Grab a random one.
+    const idx = randInt(data.length);
+    const name = data[idx];
+
+    // Strip out the underscore.
+    return name.replace('_', ' ');
+}
+
 class Player extends React.Component {
     constructor(props) {
         super(props);
@@ -26,10 +65,11 @@ class Player extends React.Component {
 
     // Set this player's name dynamically from an API
     async componentDidMount() {
-        const {data} = await axios.get(NAMES_URL);
-        console.log(data);
+        // const {data} = await axios.get(NAMES_URL);        
+        // console.log(getRandomName());
+        
         this.setState({
-            name: data[randInt(data.length)].replace('_', ' ')
+            name: await getRandomName()
         })
     }
 

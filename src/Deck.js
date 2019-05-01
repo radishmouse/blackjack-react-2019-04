@@ -37,29 +37,13 @@ export default class Deck {
     static howManyAces(hand) {
         let howMany = 0;
         for (let i=0; i< hand.length; i++) {
-            if (hand[i].name.toLowerCase().startsWith('a')) {
+            if (hand[i].isAce) {
                 howMany++;
             }
         }
         return howMany;
     }
 
-    // Given a card, return the numeric value.
-    static valueOfCard(card) {
-        // it's a 10 card
-        if (card.name.length === 3) {
-            return 10;
-        } else {
-            const firstChar = card.name[0];
-            if ('23456789'.includes(firstChar)) {
-                return parseInt(firstChar);
-            } else if ('KQJ'.includes(firstChar)) {
-                return 10;
-            } else {                
-                return 11; // Aces are 11, but can be adjusted in the context of other cards.
-            }
-        }
-    }
 
     // Calculate the numeric value of a hand,
     // adjusting for aces, if the total value is over 21.
@@ -67,7 +51,7 @@ export default class Deck {
         // assumes that hands are arrays of Card instances
         const acesInHand = Deck.howManyAces(hand);
         let handVal = 0;
-        hand.forEach(card => handVal += Deck.valueOfCard(card));
+        hand.forEach(card => handVal += card.value);
         for (let i = 0; i<acesInHand; i++) {
             if (handVal > 21) {
                 handVal -= 10;  // adjust down for aces
@@ -78,8 +62,8 @@ export default class Deck {
     }
 
     // Currently unused.
-    // Helper function for sorting hands
-    static doesBeat(hand1, hand2) {
+    // Helper function for sorting hands by score.
+    static UNUSED_doesBeat(hand1, hand2) {
         const hand1Val = Deck.valueOfHand(hand1);
         const hand2Val = Deck.valueOfHand(hand2);
         if (hand1Val > hand2Val) {
@@ -93,20 +77,19 @@ export default class Deck {
 
     // Pulls a random card from the deck.
     randomCard() {
-        const index = randInt(this.cards.length);
+        const index = randInt(this.cards.length); // random int from 0 to .length
         const aCard = this.cards[index];
-        const cardInstance = new Card(aCard);
+        const cardInstance = new Card(aCard);     // convert it to a Card instance.
         console.log(aCard);
-        // cardInstance.value = Deck.valueOfCard(cardInstance);
         return cardInstance;
     }
 
-    // Removes a random card from the deck.
+    // Removes and returns a random card from the deck.
     deal() {
-        const theCard = this.randomCard();
+        const theCard = this.randomCard();  // Grab a random one.
         this.cards = [
             // oh...this is ugly...
-            ...this.cards.filter(c => theCard.isNot(new Card(c)))
+            ...this.cards.filter(c => theCard.isNot(new Card(c)))  // Keep every card other than the one I pulled.
         ];
         return theCard;
     }
